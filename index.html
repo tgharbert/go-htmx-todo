@@ -29,8 +29,12 @@
       <ul id="todo-list" style="list-style-type: none">
         {{ range .Todos}} {{block "todos-list-element" .}}
         <li>
-          <input type="checkbox" hx-post="/check-todo/:id" /> {{.Id}} -
-          {{.Title}}
+          <input
+            id="todo-{{ .Id }}"
+            hx-put="/check-todo/{{ .Id }}"
+            type="checkbox"
+          />
+          {{.Id}} - {{.Title}}
         </li>
         {{end}} {{end}}
       </ul>

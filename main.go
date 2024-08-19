@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -19,9 +20,11 @@ type Todo struct {
 	Title string
 }
 
-func makeNewTodo (title string, number int) Todo {
+var id = 3
+func makeNewTodo (title string) Todo {
+	id++
 	return Todo {
-		Id: number,
+		Id: id,
 		Date: time.Now(),
 		Done: false,
 		Title: title,
@@ -46,14 +49,11 @@ func main() {
 		tmpl.Execute(w, todos)
 	}
 
-	latestId := 3
 	addTodo := func(w http.ResponseWriter, r *http.Request) {
 		// getting the value from the form
 		title := r.PostFormValue("todo")
 		// creating a new Todo Obj
-		latestId += 1
-		fmt.Println("latest: ", latestId)
-		newTodo := makeNewTodo(title, latestId)
+		newTodo := makeNewTodo(title)
 		// appending the new todo to the current todos
 		todos.Todos = append(todos.Todos, newTodo)
 		// creating the template to replace the values
@@ -69,7 +69,18 @@ func main() {
 	}
 
 	checkTodo := func(w http.ResponseWriter, r *http.Request) {
-		log.Print("hit the checker", r)
+		// getting the Id from the request URL
+		uri := r.RequestURI
+		// getting the last digit from the URI, this wouldn't work with two digit numbers....
+		stringId := string(uri[len(uri) - 1])
+		// converting that string into a number
+		id, err := strconv.ParseInt(stringId, 10, 32)
+		if err != nil {
+			log.Print("Error altering done status of item")
+		}
+		// toggling the done status of the item
+		todos.Todos[id - 1].Done = !todos.Todos[id - 1].Done
+		// fmt.Println(todos.Todos[id - 1].Done)
 	}
 
 	http.HandleFunc("/", home)
