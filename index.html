@@ -23,7 +23,7 @@
       <button>Submit</button>
     </form>
 
-    <button>Delete</button>
+    <button hx-delete="/delete-todos/">Delete</button>
 
     <div id="todo-wrapper">
       <ul id="todo-list" style="list-style-type: none">
@@ -34,7 +34,7 @@
             hx-put="/check-todo/{{ .Id }}"
             type="checkbox"
           />
-          {{.Id}} - {{.Title}}
+          {{.Done}}{{.Id}} - {{.Title}}
         </li>
         {{end}} {{end}}
       </ul>
