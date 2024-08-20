@@ -11,7 +11,7 @@
     ></script>
   </head>
   <body>
-    <h1>Hello to the damn todo list...</h1>
+    <h1>ToDo List...</h1>
     <form
       hx-post="/add-todo/"
       hx-target="#todo-list"
@@ -28,13 +28,23 @@
     <div id="todo-wrapper">
       <ul id="todo-list" style="list-style-type: none">
         {{ range .Todos}} {{block "todos-list-element" .}}
-        <li>
+        <li id="{{ .Id }}">
           <input
             id="todo-{{ .Id }}"
             hx-put="/check-todo/{{ .Id }}"
+            hx-swap="outerHTML"
             type="checkbox"
+            hx-target="#todo-{{ .Id }}"
+            {{
+            if
+            .Done
+            }}
+            checked
+            {{
+            end
+            }}
           />
-          {{.Done}}{{.Id}} - {{.Title}}
+          {{.Id}} - {{.Title}}
         </li>
         {{end}} {{end}}
       </ul>

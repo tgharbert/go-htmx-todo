@@ -38,7 +38,7 @@ func main() {
 		Todos: []Todo{
 			{Id: 1, Date: time.Now(), Done: false, Title: "learn go"},
 			{Id: 2, Date: time.Now(), Done: false, Title: "learn htmx"},
-			{Id: 3, Date: time.Now(), Done: false, Title: "don't be dumb"},
+			{Id: 3, Date: time.Now(), Done: false, Title: "hook this thing up to MySQL"},
 		},
 	}
 
@@ -66,21 +66,25 @@ func main() {
 
 	deleteTodos := func(w http.ResponseWriter, r *http.Request) {
 		log.Print("hit the delete")
+
 	}
 
 	checkTodo := func(w http.ResponseWriter, r *http.Request) {
 		// getting the Id from the request URL
-		uri := r.RequestURI
-		// getting the last digit from the URI, this wouldn't work with two digit numbers....
-		stringId := string(uri[len(uri) - 1])
+		newId := r.URL.Path[len("/check-todo/"):]
 		// converting that string into a number
-		id, err := strconv.ParseInt(stringId, 10, 32)
+		id, err := strconv.ParseInt(newId, 10, 8)
 		if err != nil {
 			log.Print("Error altering done status of item")
 		}
+
 		// toggling the done status of the item
 		todos.Todos[id - 1].Done = !todos.Todos[id - 1].Done
-		// fmt.Println(todos.Todos[id - 1].Done)
+		changedTodo := todos.Todos[id - 1]
+		fmt.Println(todos.Todos[id - 1])
+		// add return of the ToDo then swap the HTMX stuff??
+		tmpl := template.Must(template.ParseFiles("index.html"))
+		tmpl.ExecuteTemplate(w, "todos-list-element", changedTodo)
 	}
 
 	http.HandleFunc("/", home)
