@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -32,7 +31,7 @@ func makeNewTodo (title string) Todo {
 }
 
 func main() {
-	fmt.Println("Listening on port 8080...")
+	log.Print("Listening on port 8080...")
 	// data that will be passed to the template - irl coming from DB
 	todos := Todos{
 		Todos: []Todo{
@@ -52,11 +51,15 @@ func main() {
 	addTodo := func(w http.ResponseWriter, r *http.Request) {
 		// getting the value from the form
 		title := r.PostFormValue("todo")
+		// checking to see if there is a value sent
+		if title == "" {
+			return
+		}
 		// creating a new Todo Obj
 		newTodo := makeNewTodo(title)
 		// appending the new todo to the current todos
 		todos.Todos = append(todos.Todos, newTodo)
-		// creating the template to replace the values
+		// creating the template to replace the value
 		tmpl := template.Must(template.ParseFiles("index.html"))
 		err := tmpl.ExecuteTemplate(w, "todos-list-element", newTodo)
 		if err != nil {
@@ -65,8 +68,21 @@ func main() {
 	}
 
 	deleteTodos := func(w http.ResponseWriter, r *http.Request) {
-		log.Print("hit the delete")
-
+		// this is how to delete elements from an array in place
+		j := 0
+		for i := 0; i < len(todos.Todos); i++ {
+			if (!todos.Todos[i].Done) {
+				todos.Todos[j] = todos.Todos[i]
+				j++
+			}
+		}
+		todos.Todos = todos.Todos[:j]
+		tmpl := template.Must(template.ParseFiles("index.html"))
+		// created a new template in the HTML file and now sending that template to replace the list
+		err := tmpl.ExecuteTemplate(w, "todos-list", todos)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}
 
 	checkTodo := func(w http.ResponseWriter, r *http.Request) {
@@ -77,11 +93,13 @@ func main() {
 		if err != nil {
 			log.Print("Error altering done status of item")
 		}
-
-		// toggling the done status of the item
-		todos.Todos[id - 1].Done = !todos.Todos[id - 1].Done
-		changedTodo := todos.Todos[id - 1]
-		fmt.Println(todos.Todos[id - 1])
+		var changedTodo Todo
+		for i := 0; i < len(todos.Todos); i++ {
+			if todos.Todos[i].Id == int(id) {
+				todos.Todos[i].Done = !todos.Todos[i].Done
+				changedTodo = todos.Todos[i]
+			}
+		}
 		// add return of the ToDo then swap the HTMX stuff??
 		tmpl := template.Must(template.ParseFiles("index.html"))
 		tmpl.ExecuteTemplate(w, "todos-list-element", changedTodo)
