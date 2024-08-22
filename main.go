@@ -19,6 +19,11 @@ type Todo struct {
 	Title string
 }
 
+// just for reference
+// func changeStatus (t *Todo) {
+// 	t.Done = !t.Done
+// }
+
 var id = 3
 func makeNewTodo (title string) Todo {
 	id++
@@ -97,6 +102,8 @@ func main() {
 		for i := 0; i < len(todos.Todos); i++ {
 			if todos.Todos[i].Id == int(id) {
 				todos.Todos[i].Done = !todos.Todos[i].Done
+				// added a func to remind of pointers and memory concern
+				// changeStatus(&todos.Todos[i])
 				changedTodo = todos.Todos[i]
 			}
 		}
