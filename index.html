@@ -30,6 +30,9 @@
     >
       Delete
     </button>
+    <button hx-delete="/delete-all/" hx-target="#todo-list" hx-swap="innerHTML">
+      Delete All
+    </button>
     <div id="todo-wrapper">
       {{ block "todos-list" . }}
       <ul id="todo-list" style="list-style-type: none">

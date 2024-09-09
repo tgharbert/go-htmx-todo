@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -37,7 +36,7 @@ func makeNewTodo (title string) Todo {
 }
 
 func main() {
-	log.Print("Listening on port 8080...")
+	log.Print("Listening on port 3000...")
 	// data that will be passed to the template - irl coming from DB
 	todos := Todos{
 		Todos: []Todo{
@@ -91,9 +90,19 @@ func main() {
 		}
 	}
 
+	deleteAllTodos := func(w http.ResponseWriter, r *http.Request) {
+		todos.Todos = []Todo{}
+		tmpl := template.Must(template.ParseFiles("index.html"))
+		err := tmpl.ExecuteTemplate(w, "todos-list", todos)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+
 	checkTodo := func(w http.ResponseWriter, r *http.Request) {
 		// getting the Id from the request URL
 		newId := r.URL.Path[len("/check-todo/"):]
+
 		// converting that string into a number
 		id, err := strconv.ParseInt(newId, 10, 8)
 		if err != nil {
@@ -105,7 +114,6 @@ func main() {
 				// todos.Todos[i].Done = !todos.Todos[i].Done
 				// added a func to remind of pointers and memory concern
 				changeStatus(&todos.Todos[i])
-				fmt.Println(todos.Todos)
 				// changedTodo = todos.Todos[i]
 			}
 		}
@@ -118,6 +126,7 @@ func main() {
 	http.HandleFunc("/add-todo/", addTodo)
 	http.HandleFunc("/delete-todos/", deleteTodos)
 	http.HandleFunc("/check-todo/", checkTodo)
+	http.HandleFunc("/delete-all/", deleteAllTodos)
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":3000", nil))
 }
