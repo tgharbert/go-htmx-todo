@@ -12,6 +12,8 @@ import (
 
 func main() {
 
+	// db.Connect()
+
 	err := godotenv.Load()
 	if err != nil {
 		panic(err)
