@@ -1,0 +1,18 @@
+body {
+  background-color: orange;
+  color: blue;
+  font: 200;
+}
+
+#todo-list {
+  font: 200;
+}
+
+#delete {
+  font: 500;
+  color: green;
+}
+
+h1 {
+  font: bold color yellow;
+}

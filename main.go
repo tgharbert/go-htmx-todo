@@ -18,6 +18,8 @@ func main() {
 	}
 	testVar := os.Getenv("TEST");
 	fmt.Println(testVar)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
 
 	log.Print("Listening on port 8080...")
 	http.HandleFunc("/", routes.Homepage)
