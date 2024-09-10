@@ -21,7 +21,7 @@
     >
       <label>Add Todo:</label>
       <input type="text" name="todo" />
-      <button>Submit</button>
+      <button id="submit-todo">Submit</button>
     </form>
 
     <button
@@ -32,34 +32,14 @@
     >
       Delete
     </button>
-    <button hx-delete="/delete-all/" hx-target="#todo-list" hx-swap="innerHTML">
+    <button
+      hx-delete="/delete-all/"
+      hx-target="#todo-list"
+      hx-swap="innerHTML"
+      id="delete"
+    >
       Delete All
     </button>
-    <div id="todo-wrapper">
-      {{ block "todos-list" . }}
-      <ul id="todo-list" style="list-style-type: none">
-        {{ range .Todos}} {{block "todos-list-element" .}}
-        <li id="{{ .Id }}">
-          <input
-            id="todo-{{ .Id }}"
-            hx-put="/check-todo/{{ .Id }}"
-            hx-swap="innerHTML"
-            type="checkbox"
-            hx-target="#todo-{{ .Id }}"
-            {{
-            if
-            .Done
-            }}
-            checked
-            {{
-            end
-            }}
-          />
-          {{.Title}}
-        </li>
-        {{end}} {{end}}
-      </ul>
-      {{ end }}
-    </div>
+    {{template "todolistHTML" .}} {{template "footerHTML" .}}
   </body>
 </html>

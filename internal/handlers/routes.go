@@ -48,7 +48,7 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 	// // pass the data to the template with the Execute method
 	// tmpl.Execute(w, todos)
 
-	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+	tmpl := template.Must(template.ParseFiles("templates/index.html", "templates/footer.html", "templates/todolist.html"))
 	err := tmpl.Execute(w, struct{ Todos []Todo }{Todos: todos.Todos})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -67,7 +67,7 @@ func AddTodo(w http.ResponseWriter, r *http.Request) {
 	// appending the new todo to the current todos
 	todos.Todos = append(todos.Todos, newTodo)
 	// creating the template to replace the value
-	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+	tmpl := template.Must(template.ParseFiles("templates/todolist.html"))
 	err := tmpl.ExecuteTemplate(w, "todos-list-element", newTodo)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -84,7 +84,7 @@ func DeleteTodos(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	todos.Todos = todos.Todos[:j]
-	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+	tmpl := template.Must(template.ParseFiles("templates/todolist.html"))
 	// created a new template in the HTML file and now sending that template to replace the list
 	err := tmpl.ExecuteTemplate(w, "todos-list", todos)
 	if err != nil {
@@ -94,7 +94,7 @@ func DeleteTodos(w http.ResponseWriter, r *http.Request) {
 
 func DeleteAllTodos(w http.ResponseWriter, r *http.Request) {
 	todos.Todos = []Todo{}
-	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+	tmpl := template.Must(template.ParseFiles("templates/todolist.html"))
 	err := tmpl.ExecuteTemplate(w, "todos-list", todos)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
