@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 	routes "todo/internal/handlers"
-	"todo/internal/store/db"
+	db "todo/internal/store/db"
 )
 
 func main() {
