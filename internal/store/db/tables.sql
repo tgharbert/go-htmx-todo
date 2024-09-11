@@ -8,4 +8,5 @@ CREATE TABLE todos (
 );
 
 -- CLI TO RUN THIS FROM THE ROOT DIR -- ADJUST PATH IF NECESSARY
+-- NEEDED TO NAVIGATE INTO THE DB TO DO THIS...
 -- \i internal/store/db/tables.sql

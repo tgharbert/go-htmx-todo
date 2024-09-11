@@ -45,7 +45,10 @@ func changeStatus (t *Todo) {
 func Homepage(w http.ResponseWriter, r *http.Request) {
 	// template object renders the name of the template that we want to render
 	tmpl := template.Must(template.ParseFiles("templates/index.html", "templates/footer.html", "templates/todolist.html"))
-	// // pass the data to the template with the Execute method
+
+	// todos :=
+
+	// pass the data to the template with the Execute method
 	err := tmpl.Execute(w, todos)
 
 	if err != nil {
