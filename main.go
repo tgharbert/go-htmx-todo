@@ -1,34 +1,27 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"os"
 	routes "todo/internal/handlers"
-
-	"github.com/joho/godotenv"
+	"todo/internal/store/db"
 )
 
 func main() {
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// testVar := os.Getenv("DATABASE_URL");
+	db.Connect()
 
-	// db.Connect()
-
-	err := godotenv.Load()
-	if err != nil {
-		panic(err)
-	}
-	testVar := os.Getenv("TEST");
-	fmt.Println(testVar)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-
-
-	log.Print("Listening on port 8080...")
 	http.HandleFunc("/", routes.Homepage)
 	http.HandleFunc("/add-todo/", routes.AddTodo)
 	http.HandleFunc("/delete-todos/", routes.DeleteTodos)
 	http.HandleFunc("/check-todo/", routes.CheckTodo)
 	http.HandleFunc("/delete-all/", routes.DeleteAllTodos)
 
+	log.Print("Listening on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
