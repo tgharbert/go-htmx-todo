@@ -1,0 +1,30 @@
+<!-- {{define "todoformHTML"}}
+<form
+  hx-post="/add-todo/"
+  hx-target="#todo-list"
+  hx-swap="beforeend"
+  hx-on::after-request="this.reset()"
+>
+  <label>Add Todo:</label>
+  <input type="text" name="todo" />
+  <button id="submit-todo">Submit</button>
+</form>
+
+<button
+  hx-delete="/delete-todos/"
+  hx-target="#todo-wrapper"
+  hx-swap="innerHTML"
+  id="delete"
+>
+  Delete
+</button>
+<button
+  hx-delete="/delete-all/"
+  hx-target="#todo-list"
+  hx-swap="innerHTML"
+  id="delete"
+>
+  Delete All
+</button>
+
+{{end}} -->
