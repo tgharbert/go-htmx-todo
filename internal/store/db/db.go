@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -23,7 +22,7 @@ type Todo struct {
 }
 
 
-func Connect() {
+func Connect() *pgx.Conn {
 	err := godotenv.Load()
 	if err != nil {
 		panic(err)
@@ -33,27 +32,42 @@ func Connect() {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
-	defer conn.Close(context.Background())
+	// defer conn.Close(context.Background())
+	return conn
+}
 
-	// get the todos...
-	query := "SELECT * FROM todos"
-	rows, err := conn.Query(context.Background(), query)
-	// No longer failing here.
-	if err != nil {
-		log.Fatalf("Initial query failed: %v\n", err)
-	}
-	defer rows.Close()
-
-	var todos []Todo
-	for rows.Next(){
-
-		var todo Todo
-		err := rows.Scan(&todo.Id, &todo.Date, &todo.Done, &todo.Title)
+func GetTodos(c *pgx.Conn) ([]Todo, error) {
+		// get the todos...
+		query := "SELECT * FROM todos"
+		rows, err := c.Query(context.Background(), query)
 		if err != nil {
-			log.Fatalf("Error scanning row %v\n", err)
+			return nil, fmt.Errorf("initial query failed: %v", err)
 		}
-		todos = append(todos, todo)
-	}
+		defer rows.Close()
 
-	fmt.Println(todos)
+		var todos []Todo
+		for rows.Next(){
+			var todo Todo
+			err := rows.Scan(&todo.Id, &todo.Date, &todo.Done, &todo.Title)
+			if err != nil {
+				return nil, fmt.Errorf("error scanning row %v", err)
+			}
+			todos = append(todos, todo)
+		}
+		if rows.Err() != nil {
+			return nil, rows.Err()
+		}
+		return todos, nil
+}
+
+// MODIFY QUERY TO RETURN ADDED VALUE
+func AddTodo(c *pgx.Conn, title string) (error) {
+	query := `INSERT INTO todos (date, done, title) VALUES ($1, $2, $3)`
+	// var todoId int
+	_, err := c.Exec(context.Background(), query, time.Now(), false, title)
+
+	if err != nil {
+			return fmt.Errorf("failed to insert todo: %v", err)
+	}
+	return nil
 }

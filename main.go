@@ -19,9 +19,9 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.HandleFunc("/", routes.Homepage)
 	http.HandleFunc("/add-todo/", routes.AddTodo)
-	http.HandleFunc("/delete-todos/", routes.DeleteTodos)
-	http.HandleFunc("/check-todo/", routes.CheckTodo)
-	http.HandleFunc("/delete-all/", routes.DeleteAllTodos)
+	// http.HandleFunc("/delete-todos/", routes.DeleteTodos)
+	// http.HandleFunc("/check-todo/", routes.CheckTodo)
+	// http.HandleFunc("/delete-all/", routes.DeleteAllTodos)
 
 	log.Print("Listening on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
