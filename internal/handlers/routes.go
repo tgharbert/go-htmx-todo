@@ -22,29 +22,6 @@ type Todo struct {
 	Title string
 }
 
-var id = 3
-func makeNewTodo (title string) Todo {
-	id++
-	return Todo {
-		Id: id,
-		Date: time.Now(),
-		Done: false,
-		Title: title,
-	}
-}
-
-// var todos = Todos{
-// 	Todos: []Todo{
-// 		{Id: 1, Date: time.Now(), Done: false, Title: "learn go"},
-// 		{Id: 2, Date: time.Now(), Done: false, Title: "learn htmx"},
-// 		{Id: 3, Date: time.Now(), Done: false, Title: "hook this thing up to MySQL"},
-// 	},
-// }
-
-// func changeStatus (t *Todo) {
-// 	t.Done = !t.Done
-// }
-
 type PageData struct {
 	Todos []db.Todo
 }
@@ -74,7 +51,6 @@ func AddTodo(w http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("todo")
 	// checking to see if there is a value sent
 	if title == "" {
-		fmt.Println("test")
 		return
 	}
 	conn := db.Connect()
@@ -83,7 +59,6 @@ func AddTodo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("error adding todo: %v", err)
 	}
-
 	// checking for bad value, returning a todo no matter what
 	if todo.Title == "" {
 		return
@@ -112,19 +87,26 @@ func DeleteTodos(w http.ResponseWriter, r *http.Request) {
 	}
 	err = tmpl.ExecuteTemplate(w, "todos-list", data)
 	if err != nil {
-		fmt.Println("HJERE IS THE BIG ERROROOOREJ:LKSDJF", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-// func DeleteAllTodos(w http.ResponseWriter, r *http.Request) {
-// 	todos.Todos = []Todo{}
-// 	tmpl := template.Must(template.ParseFiles("templates/todolist.html"))
-// 	err := tmpl.ExecuteTemplate(w, "todos-list", todos)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 	}
-// }
+func DeleteAllTodos(w http.ResponseWriter, r *http.Request) {
+	// todos.Todos = []Todo{}
+	conn := db.Connect()
+	todos, err := db.DeleteAllTodos(conn)
+	if err != nil {
+		log.Fatalf("error calling db.deletealltodos func: %v", err)
+	}
+	data := PageData{
+		Todos: todos,
+	}
+	tmpl := template.Must(template.ParseFiles("templates/todolist.html"))
+	err = tmpl.ExecuteTemplate(w, "todos-list", data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
 
 func CheckTodo(w http.ResponseWriter, r *http.Request) {
 	// getting the Id from the request URL

@@ -21,7 +21,6 @@ type Todo struct {
 	Title string
 }
 
-
 func Connect() *pgx.Conn {
 	err := godotenv.Load()
 	if err != nil {
@@ -32,7 +31,6 @@ func Connect() *pgx.Conn {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
-	// defer conn.Close(context.Background())
 	return conn
 }
 
@@ -60,12 +58,10 @@ func GetTodos(c *pgx.Conn) ([]Todo, error) {
 		return todos, nil
 }
 
-// MODIFY QUERY TO RETURN ADDED VALUE
 func AddTodo(c *pgx.Conn, title string) (Todo, error) {
 	query := `INSERT INTO todos (date, done, title) VALUES ($1, $2, $3)`
 	var todo Todo
 	_, err := c.Exec(context.Background(), query, time.Now(), false, title)
-	// value to store the return in
 	if err != nil {
 		return todo, fmt.Errorf("failed to insert todo: %v", err)
 	}
@@ -85,6 +81,20 @@ func AddTodo(c *pgx.Conn, title string) (Todo, error) {
 		if rows.Err() != nil {
 			return todo, rows.Err()
 		}
+	return todo, nil
+}
+
+func ChangeTodo(c *pgx.Conn, id int64) (Todo, error) {
+	var todo Todo
+	query := `UPDATE todos SET done = NOT done WHERE id=$1 RETURNING *`
+	rows := c.QueryRow(context.Background(), query, id)
+	err := rows.Scan(&todo.Id, &todo.Date, &todo.Done, &todo.Title)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return todo, fmt.Errorf("no todo found with id: %d", id)
+		}
+		return todo, fmt.Errorf("updating todo failed: %v", err)
+	}
 	return todo, nil
 }
 
@@ -113,29 +123,14 @@ func DeleteTodos(c *pgx.Conn) ([]Todo, error) {
 		return nil, rows.Err()
 	}
 	return todos, nil
-
-
-	// for rows.Next() {
-	// 	var todo Todo
-	// 	err := rows.Scan(&todo.Id, &todo.Date, &todo.Done, &todo.Title)
-	// 	if err != nil {
-	// 		return todos, fmt.Errorf("error scanning todos: %v", err)
-	// 	}
-	// 	todos = append(todos, todo)
-	// }
-	// return todos, err
 }
 
-func ChangeTodo(c *pgx.Conn, id int64) (Todo, error) {
-	var todo Todo
-	query := `UPDATE todos SET done = NOT done WHERE id=$1 RETURNING *`
-	rows := c.QueryRow(context.Background(), query, id)
-	err := rows.Scan(&todo.Id, &todo.Date, &todo.Done, &todo.Title)
+func DeleteAllTodos(c *pgx.Conn) ([]Todo, error) {
+	var todos []Todo
+	query := "TRUNCATE TABLE todos"
+	_, err := c.Exec(context.Background(), query)
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			return todo, fmt.Errorf("no todo found with id: %d", id)
-		}
-		return todo, fmt.Errorf("updating todo failed: %v", err)
+		return todos, fmt.Errorf("error deleting all todos from db: %v", err)
 	}
-	return todo, nil
+	return todos, nil
 }
