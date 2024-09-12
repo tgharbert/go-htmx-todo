@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 	"todo/internal/store/db"
 )
@@ -40,9 +41,9 @@ func makeNewTodo (title string) Todo {
 // 	},
 // }
 
-func changeStatus (t *Todo) {
-	t.Done = !t.Done
-}
+// func changeStatus (t *Todo) {
+// 	t.Done = !t.Done
+// }
 
 type PageData struct {
 	Todos []db.Todo
@@ -57,7 +58,7 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("error getting todos: %v", err)
 	}
-	fmt.Println("todos: ", todos)
+	// fmt.Println("todos: ", todos)
 	data := PageData{
 		Todos: todos,
 	}
@@ -76,35 +77,40 @@ func AddTodo(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("test")
 		return
 	}
-	// // creating a new Todo Obj
-	// newTodo := makeNewTodo(title)
-
 	conn := db.Connect()
 	defer conn.Close(context.Background())
-	err := db.AddTodo(conn, title)
+	todo, err := db.AddTodo(conn, title)
 	if err != nil {
 		log.Fatalf("error adding todo: %v", err)
 	}
-	// // appending the new todo to the current todos
-	// todos.Todos = append(todos.Todos, newTodo)
+
+	// checking for bad value, returning a todo no matter what
+	if todo.Title == "" {
+		return
+	}
 	// creating the template to replace the value
-	// tmpl := template.Must(template.ParseFiles("templates/todolist.html"))
-	// err := tmpl.ExecuteTemplate(w, "todos-list-element", newTodo)
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// }
+	tmpl := template.Must(template.ParseFiles("templates/todolist.html"))
+	err = tmpl.ExecuteTemplate(w, "todos-list-element", todo)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 // func DeleteTodos(w http.ResponseWriter, r *http.Request) {
 // 	// this is how to delete elements from an array in place
-// 	j := 0
-// 	for i := 0; i < len(todos.Todos); i++ {
-// 		if (!todos.Todos[i].Done) {
-// 			todos.Todos[j] = todos.Todos[i]
-// 			j++
-// 		}
-// 	}
-// 	todos.Todos = todos.Todos[:j]
+// 	// j := 0
+// 	// for i := 0; i < len(todos.Todos); i++ {
+// 	// 	if (!todos.Todos[i].Done) {
+// 	// 		todos.Todos[j] = todos.Todos[i]
+// 	// 		j++
+// 	// 	}
+// 	// }
+// 	// todos.Todos = todos.Todos[:j]
+
+// 	// will delete value from table, then return the entire todos list
+
+// 	db.DeleteTodo()
 // 	tmpl := template.Must(template.ParseFiles("templates/todolist.html"))
 // 	// created a new template in the HTML file and now sending that template to replace the list
 // 	err := tmpl.ExecuteTemplate(w, "todos-list", todos)
@@ -122,24 +128,29 @@ func AddTodo(w http.ResponseWriter, r *http.Request) {
 // 	}
 // }
 
-// func CheckTodo(w http.ResponseWriter, r *http.Request) {
-// 	// getting the Id from the request URL
-// 	newId := r.URL.Path[len("/check-todo/"):]
+func CheckTodo(w http.ResponseWriter, r *http.Request) {
+	// getting the Id from the request URL
+	newId := r.URL.Path[len("/check-todo/"):]
 
-// 	// converting that string into a number
-// 	id, err := strconv.ParseInt(newId, 10, 8)
-// 	if err != nil {
-// 		log.Print("Error altering done status of item")
-// 	}
-// 	var changedTodo Todo
-// 	for i := 0; i < len(todos.Todos); i++ {
-// 		if todos.Todos[i].Id == int(id) {
-// 			// added a func to remind of pointers and memory concern
-// 			changeStatus(&todos.Todos[i])
-// 			// changedTodo = todos.Todos[i]
-// 		}
-// 	}
-// 	// add return of the ToDo then swap the HTMX stuff??
-// 	tmpl := template.Must(template.ParseFiles("templates/index.html"))
-// 	tmpl.ExecuteTemplate(w, "todos-list-element", changedTodo)
-// }
+	// converting that string into a number
+	id, err := strconv.ParseInt(newId, 10, 8)
+	if err != nil {
+		log.Print("Error altering done status of item")
+	}
+
+	conn := db.Connect()
+	defer conn.Close(context.Background())
+
+	// var todo Todo
+	todo, err := db.ChangeTodo(conn, id, true)
+	if err != nil {
+		log.Fatalf("error checking todo: %v", err)
+	}
+
+	if todo.Title == "" {
+		return
+	}
+	fmt.Println(todo)
+	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+	tmpl.ExecuteTemplate(w, "todos-list-element", todo)
+}

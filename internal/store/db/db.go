@@ -61,13 +61,62 @@ func GetTodos(c *pgx.Conn) ([]Todo, error) {
 }
 
 // MODIFY QUERY TO RETURN ADDED VALUE
-func AddTodo(c *pgx.Conn, title string) (error) {
+func AddTodo(c *pgx.Conn, title string) (Todo, error) {
 	query := `INSERT INTO todos (date, done, title) VALUES ($1, $2, $3)`
-	// var todoId int
+	var todo Todo
 	_, err := c.Exec(context.Background(), query, time.Now(), false, title)
-
+	// value to store the return in
 	if err != nil {
-			return fmt.Errorf("failed to insert todo: %v", err)
+		return todo, fmt.Errorf("failed to insert todo: %v", err)
 	}
-	return nil
+
+	lastQuery := `SELECT * FROM todos WHERE id = (SELECT MAX(id) FROM todos)`
+		rows, err := c.Query(context.Background(), lastQuery)
+		if err != nil {
+			return todo, fmt.Errorf("initial query failed: %v", err)
+		}
+		defer rows.Close()
+
+		for rows.Next(){
+			err := rows.Scan(&todo.Id, &todo.Date, &todo.Done, &todo.Title)
+			if err != nil {
+				return todo, fmt.Errorf("error scanning row %v", err)
+			}
+		}
+		if rows.Err() != nil {
+			return todo, rows.Err()
+		}
+	return todo, nil
+}
+
+// func DeleteTodos(c *pgx.Conn) ([]Todo, error) {
+// 	query := `DELETE * FROM todos WHERE done = true`
+// 	rows, err := c.Query(context.Background(), query)
+// 	if err != nil {
+// 		fmt.Errorf("unable to delete todos: %v", err)
+// 	}
+// 	fmt.Println("delete rows: ", rows)
+// 	return error
+// }
+
+func ChangeTodo(c *pgx.Conn, id int64, done bool) (Todo, error) {
+	// newStatus := !done
+	var todo Todo
+	query := `UPDATE todos SET done=$1 WHERE id=$2 RETURNING *`
+	rows, err := c.Query(context.Background(), query, true, id)
+	if err != nil {
+		return todo, fmt.Errorf("updating todo failed: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next(){
+		err := rows.Scan(&todo.Id, &todo.Date, &todo.Done, &todo.Title)
+		if err != nil {
+			return todo, fmt.Errorf("error scanning row %v", err)
+		}
+	}
+	if rows.Err() != nil {
+		return todo, rows.Err()
+	}
+	return todo, nil
 }
