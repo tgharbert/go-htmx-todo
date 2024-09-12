@@ -38,7 +38,7 @@ func Connect() *pgx.Conn {
 
 func GetTodos(c *pgx.Conn) ([]Todo, error) {
 		// get the todos...
-		query := "SELECT * FROM todos"
+		query := "SELECT * FROM todos ORDER BY id"
 		rows, err := c.Query(context.Background(), query)
 		if err != nil {
 			return nil, fmt.Errorf("initial query failed: %v", err)
@@ -99,11 +99,12 @@ func AddTodo(c *pgx.Conn, title string) (Todo, error) {
 // 	return error
 // }
 
-func ChangeTodo(c *pgx.Conn, id int64, done bool) (Todo, error) {
+func ChangeTodo(c *pgx.Conn, id int64) (Todo, error) {
 	// newStatus := !done
+	// fmt.Println(newStatus)
 	var todo Todo
-	query := `UPDATE todos SET done=$1 WHERE id=$2 RETURNING *`
-	rows, err := c.Query(context.Background(), query, true, id)
+	query := `UPDATE todos SET done = NOT done WHERE id=$1 RETURNING *`
+	rows, err := c.Query(context.Background(), query, id)
 	if err != nil {
 		return todo, fmt.Errorf("updating todo failed: %v", err)
 	}

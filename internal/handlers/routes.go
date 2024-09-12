@@ -142,7 +142,7 @@ func CheckTodo(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close(context.Background())
 
 	// var todo Todo
-	todo, err := db.ChangeTodo(conn, id, true)
+	todo, err := db.ChangeTodo(conn, id)
 	if err != nil {
 		log.Fatalf("error checking todo: %v", err)
 	}
