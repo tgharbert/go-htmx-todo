@@ -76,7 +76,6 @@ func AddTodo(c *pgx.Conn, title string) (Todo, error) {
 			return todo, fmt.Errorf("initial query failed: %v", err)
 		}
 		defer rows.Close()
-
 		for rows.Next(){
 			err := rows.Scan(&todo.Id, &todo.Date, &todo.Done, &todo.Title)
 			if err != nil {
@@ -89,35 +88,54 @@ func AddTodo(c *pgx.Conn, title string) (Todo, error) {
 	return todo, nil
 }
 
-// func DeleteTodos(c *pgx.Conn) ([]Todo, error) {
-// 	query := `DELETE * FROM todos WHERE done = true`
-// 	rows, err := c.Query(context.Background(), query)
-// 	if err != nil {
-// 		fmt.Errorf("unable to delete todos: %v", err)
-// 	}
-// 	fmt.Println("delete rows: ", rows)
-// 	return error
-// }
-
-func ChangeTodo(c *pgx.Conn, id int64) (Todo, error) {
-	// newStatus := !done
-	// fmt.Println(newStatus)
-	var todo Todo
-	query := `UPDATE todos SET done = NOT done WHERE id=$1 RETURNING *`
-	rows, err := c.Query(context.Background(), query, id)
+func DeleteTodos(c *pgx.Conn) ([]Todo, error) {
+	var todos []Todo
+	query := `DELETE FROM todos WHERE done = true`
+	_, err := c.Exec(context.Background(), query)
 	if err != nil {
-		return todo, fmt.Errorf("updating todo failed: %v", err)
+		return todos, fmt.Errorf("unable to delete todos: %v", err)
+	}
+	allQuery := "SELECT * FROM todos ORDER BY id"
+	rows, err := c.Query(context.Background(), allQuery)
+	if err != nil {
+		return nil, fmt.Errorf("initial query failed: %v", err)
 	}
 	defer rows.Close()
-
 	for rows.Next(){
+		var todo Todo
 		err := rows.Scan(&todo.Id, &todo.Date, &todo.Done, &todo.Title)
 		if err != nil {
-			return todo, fmt.Errorf("error scanning row %v", err)
+			return nil, fmt.Errorf("error scanning row %v", err)
 		}
+		todos = append(todos, todo)
 	}
 	if rows.Err() != nil {
-		return todo, rows.Err()
+		return nil, rows.Err()
+	}
+	return todos, nil
+
+
+	// for rows.Next() {
+	// 	var todo Todo
+	// 	err := rows.Scan(&todo.Id, &todo.Date, &todo.Done, &todo.Title)
+	// 	if err != nil {
+	// 		return todos, fmt.Errorf("error scanning todos: %v", err)
+	// 	}
+	// 	todos = append(todos, todo)
+	// }
+	// return todos, err
+}
+
+func ChangeTodo(c *pgx.Conn, id int64) (Todo, error) {
+	var todo Todo
+	query := `UPDATE todos SET done = NOT done WHERE id=$1 RETURNING *`
+	rows := c.QueryRow(context.Background(), query, id)
+	err := rows.Scan(&todo.Id, &todo.Date, &todo.Done, &todo.Title)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return todo, fmt.Errorf("no todo found with id: %d", id)
+		}
+		return todo, fmt.Errorf("updating todo failed: %v", err)
 	}
 	return todo, nil
 }

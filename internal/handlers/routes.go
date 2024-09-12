@@ -97,27 +97,25 @@ func AddTodo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// func DeleteTodos(w http.ResponseWriter, r *http.Request) {
-// 	// this is how to delete elements from an array in place
-// 	// j := 0
-// 	// for i := 0; i < len(todos.Todos); i++ {
-// 	// 	if (!todos.Todos[i].Done) {
-// 	// 		todos.Todos[j] = todos.Todos[i]
-// 	// 		j++
-// 	// 	}
-// 	// }
-// 	// todos.Todos = todos.Todos[:j]
-
-// 	// will delete value from table, then return the entire todos list
-
-// 	db.DeleteTodo()
-// 	tmpl := template.Must(template.ParseFiles("templates/todolist.html"))
-// 	// created a new template in the HTML file and now sending that template to replace the list
-// 	err := tmpl.ExecuteTemplate(w, "todos-list", todos)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 	}
-// }
+func DeleteTodos(w http.ResponseWriter, r *http.Request) {
+	// will delete value from table, then return the entire todos list
+	conn := db.Connect()
+	defer conn.Close(context.Background())
+	todos, err := db.DeleteTodos(conn)
+	if err != nil {
+		log.Fatalf("error deleting todos from db: %v", err)
+	}
+	tmpl := template.Must(template.ParseFiles("templates/todolist.html"))
+	// created a new template in the HTML file and now sending that template to replace the list
+	data := PageData{
+		Todos: todos,
+	}
+	err = tmpl.ExecuteTemplate(w, "todos-list", data)
+	if err != nil {
+		fmt.Println("HJERE IS THE BIG ERROROOOREJ:LKSDJF", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
 
 // func DeleteAllTodos(w http.ResponseWriter, r *http.Request) {
 // 	todos.Todos = []Todo{}
@@ -131,7 +129,6 @@ func AddTodo(w http.ResponseWriter, r *http.Request) {
 func CheckTodo(w http.ResponseWriter, r *http.Request) {
 	// getting the Id from the request URL
 	newId := r.URL.Path[len("/check-todo/"):]
-
 	// converting that string into a number
 	id, err := strconv.ParseInt(newId, 10, 8)
 	if err != nil {
@@ -140,17 +137,14 @@ func CheckTodo(w http.ResponseWriter, r *http.Request) {
 
 	conn := db.Connect()
 	defer conn.Close(context.Background())
-
-	// var todo Todo
+	// need to alter for proper error handling within func??
 	todo, err := db.ChangeTodo(conn, id)
 	if err != nil {
 		log.Fatalf("error checking todo: %v", err)
 	}
-
 	if todo.Title == "" {
 		return
 	}
-	fmt.Println(todo)
 	tmpl := template.Must(template.ParseFiles("templates/index.html"))
 	tmpl.ExecuteTemplate(w, "todos-list-element", todo)
 }
