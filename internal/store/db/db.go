@@ -33,7 +33,6 @@ func Connect() {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Println("conn: ", conn)
 	defer conn.Close(context.Background())
 
 	// get the todos...
@@ -43,6 +42,18 @@ func Connect() {
 	if err != nil {
 		log.Fatalf("Initial query failed: %v\n", err)
 	}
-	fmt.Println(rows)
 	defer rows.Close()
+
+	var todos []Todo
+	for rows.Next(){
+
+		var todo Todo
+		err := rows.Scan(&todo.Id, &todo.Date, &todo.Done, &todo.Title)
+		if err != nil {
+			log.Fatalf("Error scanning row %v\n", err)
+		}
+		todos = append(todos, todo)
+	}
+
+	fmt.Println(todos)
 }
